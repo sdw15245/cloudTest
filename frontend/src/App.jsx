@@ -1,121 +1,110 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
 
+const FILTERS = ['All', 'Active', 'Completed']
+
+let nextId = 1
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [todos, setTodos] = useState([])
+  const [input, setInput] = useState('')
+  const [filter, setFilter] = useState('All')
+
+  const addTodo = () => {
+    const text = input.trim()
+    if (!text) return
+    setTodos([...todos, { id: nextId++, text, done: false }])
+    setInput('')
+  }
+
+  const toggleTodo = (id) =>
+    setTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+
+  const deleteTodo = (id) => setTodos(todos.filter((t) => t.id !== id))
+
+  const clearCompleted = () => setTodos(todos.filter((t) => !t.done))
+
+  const filtered = todos.filter((t) => {
+    if (filter === 'Active') return !t.done
+    if (filter === 'Completed') return t.done
+    return true
+  })
+
+  const activeCount = todos.filter((t) => !t.done).length
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+    <div className="todo-app">
+      이순신
+      <h1>Todo</h1>
+      <div className="todo-input-row">
+        <input
+          className="todo-input"
+          type="text"
+          placeholder="What needs to be done?"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && addTodo()}
+        />
+        <button className="todo-add-btn" onClick={addTodo}>
+          Add
         </button>
-      </section>
+      </div>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      <div className="todo-card">
+        <div className="todo-filters">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              className={`filter-btn${filter === f ? ' active' : ''}`}
+              onClick={() => setFilter(f)}
+            >
+              {f}
+            </button>
+          ))}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {filtered.length === 0 ? (
+          <p className="todo-empty">
+            {filter === 'Completed' ? 'No completed tasks.' : 'No tasks yet.'}
+          </p>
+        ) : (
+          <ul className="todo-list">
+            {filtered.map((todo) => (
+              <li key={todo.id} className={`todo-item${todo.done ? ' done' : ''}`}>
+                <button
+                  className="todo-check"
+                  onClick={() => toggleTodo(todo.id)}
+                  aria-label={todo.done ? 'Mark incomplete' : 'Mark complete'}
+                >
+                  {todo.done && (
+                    <svg viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 5l3.5 3.5L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </button>
+                <span className="todo-text">{todo.text}</span>
+                <button
+                  className="todo-delete"
+                  onClick={() => deleteTodo(todo.id)}
+                  aria-label="Delete"
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="todo-footer">
+          <span>{activeCount} item{activeCount !== 1 ? 's' : ''} left</span>
+          {todos.some((t) => t.done) && (
+            <button className="clear-btn" onClick={clearCompleted}>
+              Clear completed
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 
