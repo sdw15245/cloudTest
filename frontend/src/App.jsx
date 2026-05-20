@@ -1,28 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
+const API_BASE = 'http://localhost:8080/api/todos'
 const FILTERS = ['All', 'Active', 'Completed']
-
-let nextId = 1
 
 function App() {
   const [todos, setTodos] = useState([])
   const [input, setInput] = useState('')
   const [filter, setFilter] = useState('All')
 
-  const addTodo = () => {
+  useEffect(() => {
+    fetch(API_BASE)
+      .then((res) => res.json())
+      .then(setTodos)
+  }, [])
+
+  const addTodo = async () => {
     const text = input.trim()
     if (!text) return
-    setTodos([...todos, { id: nextId++, text, done: false }])
+    const res = await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    })
+    const todo = await res.json()
+    setTodos((prev) => [...prev, todo])
     setInput('')
   }
 
-  const toggleTodo = (id) =>
-    setTodos(todos.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+  const toggleTodo = async (id) => {
+    const res = await fetch(`${API_BASE}/${id}`, { method: 'PATCH' })
+    const updated = await res.json()
+    setTodos((prev) => prev.map((t) => (t.id === id ? updated : t)))
+  }
 
-  const deleteTodo = (id) => setTodos(todos.filter((t) => t.id !== id))
+  const deleteTodo = async (id) => {
+    await fetch(`${API_BASE}/${id}`, { method: 'DELETE' })
+    setTodos((prev) => prev.filter((t) => t.id !== id))
+  }
 
-  const clearCompleted = () => setTodos(todos.filter((t) => !t.done))
+  const clearCompleted = async () => {
+    await fetch(`${API_BASE}/completed`, { method: 'DELETE' })
+    setTodos((prev) => prev.filter((t) => !t.done))
+  }
 
   const filtered = todos.filter((t) => {
     if (filter === 'Active') return !t.done
@@ -34,7 +54,6 @@ function App() {
 
   return (
     <div className="todo-app">
-      이순신
       <h1>Todo</h1>
       <div className="todo-input-row">
         <input
